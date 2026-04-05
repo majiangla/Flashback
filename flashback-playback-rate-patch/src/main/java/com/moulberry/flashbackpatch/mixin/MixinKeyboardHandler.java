@@ -18,7 +18,9 @@ import java.util.Locale;
 public class MixinKeyboardHandler {
 
     @Unique
-    private static final float[] REPLAY_TICK_SPEEDS = new float[]{1.0f, 2.0f, 4.0f, 10.0f, 20.0f, 40.0f, 100.0f, 200.0f, 400.0f};
+    private static final float MIN_TICK_RATE = 1.0f;
+    @Unique
+    private static final float NORMAL_TICK_RATE = 20.0f;
 
     @Inject(method = "keyPress", at = @At("HEAD"))
     private void flashbackPatch$keyPress(long windowPointer, int key, int scanCode, int action, int modifiers, CallbackInfo ci) {
@@ -40,31 +42,20 @@ public class MixinKeyboardHandler {
         } else if (key == GLFW.GLFW_KEY_MINUS || key == GLFW.GLFW_KEY_KP_SUBTRACT) {
             setReplaySpeed(replayServer, false);
         } else if (key == GLFW.GLFW_KEY_0 || key == GLFW.GLFW_KEY_KP_0) {
-            replayServer.setDesiredTickRate(20.0f, true);
-            showCurrentReplaySpeed(20.0f);
+            replayServer.setDesiredTickRate(NORMAL_TICK_RATE, true);
+            showCurrentReplaySpeed(NORMAL_TICK_RATE);
         }
     }
 
     @Unique
     private static void setReplaySpeed(ReplayServer replayServer, boolean increase) {
-        float currentTickRate = replayServer.getDesiredTickRate(true);
-        float targetTickRate = increase ? REPLAY_TICK_SPEEDS[REPLAY_TICK_SPEEDS.length - 1] : REPLAY_TICK_SPEEDS[0];
+        float currentTickRate = Math.max(MIN_TICK_RATE, replayServer.getDesiredTickRate(true));
+        float targetTickRate;
 
         if (increase) {
-            for (float replayTickSpeed : REPLAY_TICK_SPEEDS) {
-                if (replayTickSpeed > currentTickRate) {
-                    targetTickRate = replayTickSpeed;
-                    break;
-                }
-            }
+            targetTickRate = currentTickRate >= Float.MAX_VALUE / 2.0f ? Float.MAX_VALUE : currentTickRate * 2.0f;
         } else {
-            for (int i = REPLAY_TICK_SPEEDS.length - 1; i >= 0; i--) {
-                float replayTickSpeed = REPLAY_TICK_SPEEDS[i];
-                if (replayTickSpeed < currentTickRate) {
-                    targetTickRate = replayTickSpeed;
-                    break;
-                }
-            }
+            targetTickRate = Math.max(MIN_TICK_RATE, currentTickRate / 2.0f);
         }
 
         if (targetTickRate != currentTickRate) {
