@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "flashback_playback_rate_patch",
+  "version": "${version}",
+  "name": "Flashback Playback Rate Patch",
+  "description": "Standalone patch mod that adds keyboard replay speed controls for Flashback.",
+  "authors": [
+    "Codex"
+  ],
+  "environment": "client",
+  "entrypoints": {},
+  "mixins": [
+    "flashback-playback-rate-patch.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": ">=1.21.1"
+  },
+  "suggests": {
+    "flashback": "*"
+  }
+}
